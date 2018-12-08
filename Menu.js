@@ -1,9 +1,12 @@
 //Menu Library for Javascript (canvas)
 //N0il
 //Note: put script library after <canvas></canvas>
+//Note: cannot pass function to buttons from Menu, like Page.draw
 var mouse_x = 0, mouse_y = 0;
 var mouse_x2 = 0, mouse_y2 = 0;
 var open = 0, components = [];
+var value = "", isWriting, lastChar;
+var fullName = "", textX, textY;
 var canv = document.getElementById("menuCanvas");
 var rect = canv.getBoundingClientRect();
 
@@ -35,6 +38,7 @@ function fullWindow() {
 }
 
 function fullScreen(){
+fullWindow();
  if (canv.requestFullscreen) {
     canv.requestFullscreen();
   } else if (canv.mozRequestFullScreen) { /* Firefox */
@@ -53,7 +57,6 @@ function createComponents(){
   }
 }
 
-
 class Page {
   constructor(fWindow, fScreen, id, backColor, width, height) {
     this.id = id;
@@ -63,7 +66,7 @@ class Page {
 	  this.width = ctx.canvas.width; 
 	  this.height = ctx.canvas.height;
     if (this.fScreen) {
-		fullScreen();
+        document.write("<button onclick='fullScreen();'>Open Menu in Fullscreen Mode</button>");
     }
 	if (this.fWindow) {
       fullWindow();
@@ -79,33 +82,42 @@ class Page {
   }
 }
 
-class Button {
-  constructor(name, id, x, y, width, height, fontSize, clickedFunction, defaultButton, backColor, color, hoveredBackColor, hoveredColor, fonte) {
+class Component {
+	constructor(id, x, y, name, color, backColor, width){
+		this.id = id;
+		this.x = x;
+		this.y = y;
+		this.name = name;
+		this.color = color;
+		this.backColor = backColor;
+		this.width = width;
+	}
 	
-    this.name = name;
-	this.id = id;
-	this.x = x;
-    this.y = y;
-	this.width = width;
+	hovered() {
+    var left = this.x;
+    var right = this.x + this.width;
+    var top = this.y;
+    var bottom = this.y + this.height;
+    if (this.id == open) {
+      this.hover = true;
+      if (bottom < mouse_y || top > mouse_y || right < mouse_x || left > mouse_x) {
+        this.hover = false;
+      }
+      return this.hover;
+    }
+  }
+}
+
+class Button extends Component {
+  constructor(id, x, y, name, clickedFunction, color = "#000000", backColor = "#FFFFFF", width = 100, height = 50, hoveredBackColor = "#000000", hoveredColor = "#FFFFFF", fonte = "Arial", fontSize = 15) {
+	super(id, x, y, name, color, backColor, width);
     this.height = height;
 	this.fontSize = fontSize;
 	this.clickedFunction = clickedFunction;
-	this.defaultButton = defaultButton;
-	this.backColor = backColor;
-    this.color = color;
     this.hoveredBackColor = hoveredBackColor;
     this.hoveredColor = hoveredColor;
     this.font = fontSize + "px " + fonte;
-    this.disable = false;
     this.hover = false;
-	  
-		if(this.defaultButton == undefined){
-    		this.backColor = "#FFFFFF";
-    		this.color = "#000000";
-    		this.hoveredBackColor = "#000000";
-    		this.hoveredColor = "#FFFFFF";
-    		this.font = fontSize + "px " + "Arial";
-		}
   }
 
   hovered() {
@@ -113,7 +125,7 @@ class Button {
     var right = this.x + this.width;
     var top = this.y;
     var bottom = this.y + this.height;
-    if (!this.disable && this.id == open) {
+    if (this.id == open) {
       this.hover = true;
       if (bottom < mouse_y || top > mouse_y || right < mouse_x || left > mouse_x) {
         this.hover = false;
@@ -127,7 +139,7 @@ class Button {
     var right = this.x + this.width;
     var top = this.y;
     var bottom = this.y + this.height;
-    if (!this.disable && this.id == open) {
+    if (this.id == open) {
       var clicked = true;
       if (bottom < mouse_y2 || top > mouse_y2 || right < mouse_x2 || left > mouse_x2) {
         clicked = false;
@@ -156,45 +168,69 @@ class Button {
       var textWidth = ctx.measureText(this.name).width;
       var textX = this.x + this.width / 2 - textWidth / 2;
       var textY = this.y + this.height / 2 + this.fontSize / 2;
-      ctx.fillText(this.name, textX, textY, (this.width));  //final parameter not correct
+      ctx.fillText(this.name, textX, textY, (this.width));  //final parameter not correct	  
     }
   }
 }
 
-class inputText {
-	constructor(id, x, y, defaultInput, name, color, backColor, width){
-		this.id = id;
-		this.x = x;
-    	this.y = y;
-		this.defaultInput = defaultInput;
-		this.name = name;
-		this.color = color;
-		this.backColor = backColor;
-		this.width = width;
+window.addEventListener('keypress', writing);
+window.addEventListener("keydown", specialKeys);
+
+function specialKeys(event){  //because keypress doesn't listen to special keys
+	  var key = event.which || event.keyCode;
+	  console.log(key);
+		if(key == 13){
+			isWriting = false;
+			return value;
+		}
+	    if(key == 8){
+			isWriting = true;
+			value = value.slice(0, value.length - 1);
+		}
+}
+function writing(event){  //because keydown doesn't listen to all char's
+  if(isWriting){
+	  var key = event.which || event.keyCode;
+	  value = this.value + String.fromCharCode(key);
+  }
+}	
+
+class inputText extends Component{
+	constructor(id, x, y, name = "Input text here...", color = "#696969", backColor = "#FFFFFF", width = 180){
+		super(id, x, y, name, color, backColor, width);
 		this.height = 26;
 		this.fontSize = 13;
 		this.font = this.fontSize + "px " + "Arial";
 		this.border = 1.5;
-		
-			if(this.defaultInput == undefined){
-				this.name = "Input text here...";
-				this.color = "#696969";
-				this.backColor = "#FFFFFF";
-				this.width = 180;
-			}
+		this.limit = (this.width - 50); 
 	}
 	draw(){
-		if(this.id = open){
-			ctx.fillStyle = "#000000";
+		if(this.id == open){
+			if(this.hovered()){
+			ctx.fillStyle = "#0000FF";
+			   }else{
+			   ctx.fillStyle = "#000000"
+			   }
 			ctx.fillRect(this.x, this.y, this.width, this.height);
 			ctx.fillStyle = this.backColor;
-			ctx.fillRect(this.x + this.border, this.y + this.border, this.width - this.border*2, this.height - this.border*2);
-			ctx.fillStyle = this.color;
-			ctx.font = this.font;
-			var textWidth = ctx.measureText(this.name).width;
-			var textX = this.x + this.border + 4	;
-        	var textY = this.y + this.height / 2 + this.fontSize / 2 - this.border;
-			ctx.fillText(this.name, textX, textY);
+			ctx.fillRect(this.x + this.border, this.y + this.border, this.width - this.border*2, this.height - this.border * 2);
+			if(isWriting){
+				this.color = "#000000"
+				this.name = value;
+			}
+			    var textWidth = ctx.measureText(this.name).width;
+				ctx.fillStyle = this.color;
+				ctx.font = this.font;
+				textX = this.x + this.border + 4;
+        	    textY = this.y + this.height / 2 + this.fontSize / 2 - this.border;
+			if(textWidth <= this.limit){  //the 50 here and above it's because of an unknown conversion
+				ctx.fillText(this.name, textX, textY);
+				fullName = this.name;
+			}
+			else{
+				isWriting = false;
+				ctx.fillText(fullName, textX, textY);
+			}
 		}
 	}
 	clicked() {
@@ -206,11 +242,14 @@ class inputText {
       		var clicked = true;
       		if (bottom < mouse_y2 || top > mouse_y2 || right < mouse_x2 || left > mouse_x2) {
 				clicked = false;
+				isWriting = false;
 			}
-      		if (clicked) {
-        		window.alert("Clicked in input box");
-			}
+				if (clicked) {
+					isWriting = true;
+					specialKeys();
+           			writing();
+      			}
 		}
-  	}
-	hovered(){}
+	}
+  	
 }

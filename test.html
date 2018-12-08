@@ -1,0 +1,38 @@
+<!-- Menu.js library test -->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	</head>
+	<body>
+				<canvas id="menuCanvas"></canvas>
+				<script src="Menu.js"></script>
+		<script>
+			function main(){
+				var main = new Page(true, false, 1, "#FD1242");	
+            	main.draw();
+			}
+			main();
+			function test(){
+				var testpage = new Page(true, false, 2, "#FFDD00");
+				testpage.draw();
+			}
+			
+			components.push(new Button(1, 300, 400, "Test", test));
+			components.push(new inputText(1, 20, 20));
+			components.push(new Button(2, 600, 200, "Back", main));
+			
+			loop = function(){
+				//console.log(open);
+				console.log(value);
+				createComponents();
+				console.log("mouse_x: " + mouse_x + " | " + "mouse_y: " + mouse_y);
+
+			window.requestAnimationFrame(loop);
+			};
+			window.requestAnimationFrame(loop);
+		</script>
+		
+	</body>
+</html>
