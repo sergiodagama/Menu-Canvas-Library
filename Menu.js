@@ -7,6 +7,8 @@ var mouse_x2 = 0, mouse_y2 = 0;
 var open = 0, components = [];
 var value = "", isWriting, lastChar;
 var fullName = "", textX, textY;
+var isDragging = false, arcHovered = false;
+var pageBackColor = [];
 var canv = document.getElementById("menuCanvas");
 var rect = canv.getBoundingClientRect();
 
@@ -91,6 +93,7 @@ class Component {
 		this.color = color;
 		this.backColor = backColor;
 		this.width = width;
+		this.hover = false;
 	}
 	
 	hovered() {
@@ -118,20 +121,6 @@ class Button extends Component {
     this.hoveredColor = hoveredColor;
     this.font = fontSize + "px " + fonte;
     this.hover = false;
-  }
-
-  hovered() {
-    var left = this.x;
-    var right = this.x + this.width;
-    var top = this.y;
-    var bottom = this.y + this.height;
-    if (this.id == open) {
-      this.hover = true;
-      if (bottom < mouse_y || top > mouse_y || right < mouse_x || left > mouse_x) {
-        this.hover = false;
-      }
-      return this.hover;
-    }
   }
 	
   clicked() {
@@ -202,14 +191,13 @@ class inputText extends Component{
 		this.fontSize = 13;
 		this.font = this.fontSize + "px " + "Arial";
 		this.border = 1.5;
-		this.limit = (this.width - 50); 
 	}
 	draw(){
 		if(this.id == open){
 			if(this.hovered()){
-			ctx.fillStyle = "#0000FF";
+				ctx.fillStyle = "#0000FF";
 			   }else{
-			   ctx.fillStyle = "#000000"
+			   	ctx.fillStyle = "#000000"
 			   }
 			ctx.fillRect(this.x, this.y, this.width, this.height);
 			ctx.fillStyle = this.backColor;
@@ -223,7 +211,7 @@ class inputText extends Component{
 				ctx.font = this.font;
 				textX = this.x + this.border + 4;
         	    textY = this.y + this.height / 2 + this.fontSize / 2 - this.border;
-			if(textWidth <= this.limit){  //the 50 here and above it's because of an unknown conversion
+			if(textWidth <= this.width){  
 				ctx.fillText(this.name, textX, textY);
 				fullName = this.name;
 			}
@@ -252,4 +240,67 @@ class inputText extends Component{
 		}
 	}
   	
+}
+
+class percentageBar extends Component{
+	constructor(id, x, y, name, color, backColor, width, height, arcColor, fontSize, arc_x){
+		super(id, x, y, name, color, backColor, width);
+		this.width = width;
+		this.height = height;
+		this.arcColor = arcColor;
+		this.fontSize = fontSize;
+		this.font = this.fontSize + "px " + "Arial";
+		this.arc_x = arc_x;
+	}
+	draw(){
+		if(open == this.id){
+		ctx.beginPath();
+		ctx.fillStyle = this.backColor;
+		ctx.fillRect(this.x, this.y, this.width, this.height);
+			
+		ctx.fillStyle = this.color;
+		for(var i = 1; i < 10; i++){
+			ctx.fillRect(this.x + (i * (this.width/10)), this.y, 3, this.height);
+		}
+		if(isDragging){
+			this.arc_x = mouse_x;
+		}
+		ctx.fillStyle = this.arcColor;
+		ctx.arc(this.arc_x, this.y + (this.height / 2), (this.height/2 + 4), 0, 2 * Math.PI);
+		ctx.fill();
+	}
+	}
+	hovered() {
+    	if (this.id == open) {
+      		arcHovered = false;
+      	    if(Math.pow((mouse_x - this.arc_x), 2) + Math.pow((mouse_y - (this.y + (this.height / 2))), 2) <= Math.pow((this.height/2 + 4	), 2)) {
+				arcHovered = true;
+			}
+		}
+	}
+
+		
+}
+
+function MouseDown(e){
+	  mouse_x = e.clientX - rect.left;
+  	  mouse_y = e.clientY - rect.top;
+	  if(arcHovered){
+	  	isDragging = true;
+	  }
+}
+
+function MouseUp(e){
+	  mouse_x = e.clientX - rect.left;
+  	  mouse_y = e.clientY - rect.top;
+	  isDragging = false;
+}
+
+window.addEventListener("mousedown", MouseDown);
+window.addEventListener("mouseup", MouseUp);
+
+class checkBox extends Component{
+	constructor(id, x, y, name, color, backColor, width){
+		super(id, x, y, name, color, backColor, width);
+	}
 }
