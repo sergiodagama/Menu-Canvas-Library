@@ -12,23 +12,24 @@
 			function main(){
 				var main = new Page(true, false, 1, "#FD1242");	
             	main.draw();
+				pages.push(main);
 			}
 			main();
 			function test(){
 				var testpage = new Page(true, false, 2, "#FFDD00");
 				testpage.draw();
+				pages.push(testpage);
 			}
-			
+			var other = new Page(true, false, 3, "#000000");
+			pages.push(other);
 			components.push(new Button(1, 300, 400, "Test", test));
 			components.push(new inputText(1, 20, 20));
 			components.push(new Button(2, 600, 200, "Back", main));
+			components.push(new percentageBar(2, 300, 300, "Test", 1));
 			
 			loop = function(){
-				//console.log(open);
-				console.log(value);
 				createComponents();
-				console.log("mouse_x: " + mouse_x + " | " + "mouse_y: " + mouse_y);
-
+				//console.log("mouse_x: " + mouse_x + " | " + "mouse_y: " + mouse_y);
 			window.requestAnimationFrame(loop);
 			};
 			window.requestAnimationFrame(loop);

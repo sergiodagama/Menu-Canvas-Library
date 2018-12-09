@@ -4,11 +4,11 @@
 //Note: cannot pass function to buttons from Menu, like Page.draw
 var mouse_x = 0, mouse_y = 0;
 var mouse_x2 = 0, mouse_y2 = 0;
-var open = 0, components = [];
-var value = "", isWriting, lastChar;
+var open = 0, components = [], pages = [];
+var value = "", isWriting;
 var fullName = "", textX, textY;
+var perc;
 var isDragging = false, arcHovered = false;
-var pageBackColor = [];
 var canv = document.getElementById("menuCanvas");
 var rect = canv.getBoundingClientRect();
 
@@ -53,6 +53,11 @@ fullWindow();
 }
 
 function createComponents(){
+	for(var page of pages){
+		if(open == page.id){
+			page.draw();
+		}
+	}
   for (var component of components) {
 	component.hovered();
     component.draw();
@@ -243,14 +248,14 @@ class inputText extends Component{
 }
 
 class percentageBar extends Component{
-	constructor(id, x, y, name, color, backColor, width, height, arcColor, fontSize, arc_x){
+	constructor(id, x, y, name, arc_x, color = "#FFFFFF", backColor = "#12917e", width = 180, height = 15, arcColor = "#121e91", fontSize = 15){
 		super(id, x, y, name, color, backColor, width);
+		this.arc_x = arc_x;
 		this.width = width;
 		this.height = height;
 		this.arcColor = arcColor;
 		this.fontSize = fontSize;
 		this.font = this.fontSize + "px " + "Arial";
-		this.arc_x = arc_x;
 	}
 	draw(){
 		if(open == this.id){
@@ -262,24 +267,39 @@ class percentageBar extends Component{
 		for(var i = 1; i < 10; i++){
 			ctx.fillRect(this.x + (i * (this.width/10)), this.y, 3, this.height);
 		}
+		if(this.arc_x < this.x){
+			this.arc_x = this.x;
+		}
+		if(this.arc_x > this.x + this.width){
+			this.arc_x = this.x + this.width;
+		}
 		if(isDragging){
 			this.arc_x = mouse_x;
+			perc = (((this.arc_x - this.x) * 100) / this.width);  //calculates percentage in function of width
+			ctx.fillStyle = this.color;
+			ctx.font = this.font;
+			var textWidth = ctx.measureText(this.name).width;
+			ctx.fillText(parseInt(perc) + " %", this.x + this.width/2 - textWidth/2, this.y - this.fontSize/2);
 		}
 		ctx.fillStyle = this.arcColor;
 		ctx.arc(this.arc_x, this.y + (this.height / 2), (this.height/2 + 4), 0, 2 * Math.PI);
 		ctx.fill();
+		if(!isDragging){
+			ctx.fillStyle = this.color;
+			ctx.font = this.font;
+			var textWidth = ctx.measureText(this.name).width;
+			ctx.fillText(this.name, this.x + this.width/2 - textWidth/2, this.y - this.fontSize/2);
+		}
 	}
 	}
 	hovered() {
     	if (this.id == open) {
       		arcHovered = false;
-      	    if(Math.pow((mouse_x - this.arc_x), 2) + Math.pow((mouse_y - (this.y + (this.height / 2))), 2) <= Math.pow((this.height/2 + 4	), 2)) {
+      	    if(Math.pow((mouse_x - this.arc_x), 2) + Math.pow((mouse_y - (this.y + (this.height / 2))), 2) <= Math.pow((this.height/2 + 4	), 2)) {  //check if mouse is in circle or not 
 				arcHovered = true;
 			}
 		}
 	}
-
-		
 }
 
 function MouseDown(e){
