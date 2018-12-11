@@ -5,9 +5,9 @@
 var mouse_x = 0, mouse_y = 0;
 var mouse_x2 = 0, mouse_y2 = 0;
 var open = 0, components = [], pages = [];
-var value = "", isWriting;
-var fullName = "", textX, textY;
-var perc;
+var values = [], isWriting = [];
+var fullName = [], textX, textY;
+var currentComp = 0, currentPerc = 0;
 var isDragging = false, arcHovered = false;
 var canv = document.getElementById("menuCanvas");
 var rect = canv.getBoundingClientRect();
@@ -114,6 +114,7 @@ class Component {
       return this.hover;
     }
   }
+	clicked(){}
 }
 
 class Button extends Component {
@@ -167,37 +168,40 @@ class Button extends Component {
   }
 }
 
-window.addEventListener('keypress', writing);
-window.addEventListener("keydown", specialKeys);
+	window.addEventListener("keypress", writing);
+	window.addEventListener("keydown", specialKeys);
 
-function specialKeys(event){  //because keypress doesn't listen to special keys
+	function specialKeys(event){  //because keypress doesn't listen to special keys
 	  var key = event.which || event.keyCode;
 	  console.log(key);
 		if(key == 13){
-			isWriting = false;
-			return value;
+			isWriting[currentComp] = false;
+			return values[currentComp];
 		}
 	    if(key == 8){
-			isWriting = true;
-			value = value.slice(0, value.length - 1);
+			isWriting[currentComp] = true;
+			values[currentComp] = values[currentComp].slice(0, values[currentComp].length - 1);
 		}
-}
-function writing(event){  //because keydown doesn't listen to all char's
-  if(isWriting){
+	}
+	function writing(event){  //because keydown doesn't listen to all char's
+  	if(isWriting[currentComp]){
 	  var key = event.which || event.keyCode;
-	  value = this.value + String.fromCharCode(key);
+	  values[currentComp] = values[currentComp] + String.fromCharCode(key);
   }
 }	
 
 class inputText extends Component{
-	constructor(id, x, y, name = "Input text here...", color = "#696969", backColor = "#FFFFFF", width = 180){
+	constructor(id, componentID, x, y, name = "Input text here...", color = "#696969", backColor = "#FFFFFF", width = 180){
 		super(id, x, y, name, color, backColor, width);
 		this.height = 26;
 		this.fontSize = 13;
 		this.font = this.fontSize + "px " + "Arial";
 		this.border = 1.5;
+		this.componentID = componentID;
+		this.defaultName = name;
 	}
 	draw(){
+		
 		if(this.id == open){
 			if(this.hovered()){
 				ctx.fillStyle = "#0000FF";
@@ -207,22 +211,33 @@ class inputText extends Component{
 			ctx.fillRect(this.x, this.y, this.width, this.height);
 			ctx.fillStyle = this.backColor;
 			ctx.fillRect(this.x + this.border, this.y + this.border, this.width - this.border*2, this.height - this.border * 2);
-			if(isWriting){
-				this.color = "#000000"
-				this.name = value;
+			if(isWriting[this.componentID]){
+				this.color = "#000000";
+				this.name = values[this.componentID];
 			}
 			    var textWidth = ctx.measureText(this.name).width;
 				ctx.fillStyle = this.color;
 				ctx.font = this.font;
 				textX = this.x + this.border + 4;
         	    textY = this.y + this.height / 2 + this.fontSize / 2 - this.border;
+			if(currentComp == this.componentID){  //to prevent writing in both at same time
 			if(textWidth <= this.width){  
-				ctx.fillText(this.name, textX, textY);
-				fullName = this.name;
+					ctx.fillText(this.name, textX, textY);
+					fullName[this.componentID] = this.name;
 			}
-			else{
-				isWriting = false;
-				ctx.fillText(fullName, textX, textY);
+				else{	
+				isWriting[this.componentID] = false;
+				ctx.fillText(fullName[this.componentID], textX, textY);
+			}
+							}
+			else{	
+				isWriting[this.componentID] = false;
+				ctx.fillText(fullName[this.componentID], textX, textY);
+			}
+			if(!isWriting[this.componentID] && values[this.componentID] == "" || values[this.componentID] == undefined){
+				fullName[this.componentID] = "";
+				this.color = "#696969";
+				ctx.fillText(this.defaultName, textX, textY);
 			}
 		}
 	}
@@ -235,10 +250,14 @@ class inputText extends Component{
       		var clicked = true;
       		if (bottom < mouse_y2 || top > mouse_y2 || right < mouse_x2 || left > mouse_x2) {
 				clicked = false;
-				isWriting = false;
+				isWriting[this.componentID] = false;
 			}
 				if (clicked) {
-					isWriting = true;
+					currentComp = this.componentID;
+					if(values[currentComp] == undefined){
+					values[currentComp] = "";
+					}
+					isWriting[this.componentID] = true;
 					specialKeys();
            			writing();
       			}
@@ -248,14 +267,16 @@ class inputText extends Component{
 }
 
 class percentageBar extends Component{
-	constructor(id, x, y, name, arc_x, color = "#FFFFFF", backColor = "#12917e", width = 180, height = 15, arcColor = "#121e91", fontSize = 15){
+	constructor(id, componentID, x, y, name, perc = 0, color = "#FFFFFF", backColor = "#12917e", width = 180, height = 15, arcColor = "#121e91", fontSize = 15){
 		super(id, x, y, name, color, backColor, width);
-		this.arc_x = arc_x;
+		this.perc = perc;
+		this.componentID = componentID;
 		this.width = width;
 		this.height = height;
 		this.arcColor = arcColor;
 		this.fontSize = fontSize;
 		this.font = this.fontSize + "px " + "Arial";
+		this.arc_x = (this.perc * this.width) / (100) + this.x;  //converts percentage into coords (x)
 	}
 	draw(){
 		if(open == this.id){
@@ -273,13 +294,13 @@ class percentageBar extends Component{
 		if(this.arc_x > this.x + this.width){
 			this.arc_x = this.x + this.width;
 		}
-		if(isDragging){
+		if(isDragging && currentPerc == this.componentID){
 			this.arc_x = mouse_x;
-			perc = (((this.arc_x - this.x) * 100) / this.width);  //calculates percentage in function of width
+			this.perc = (((this.arc_x - this.x) * 100) / this.width);  //calculates percentage in function of width
 			ctx.fillStyle = this.color;
 			ctx.font = this.font;
 			var textWidth = ctx.measureText(this.name).width;
-			ctx.fillText(parseInt(perc) + " %", this.x + this.width/2 - textWidth/2, this.y - this.fontSize/2);
+			ctx.fillText(parseInt(this.perc) + " %", this.x + this.width/2 - textWidth/2, this.y - this.fontSize/2);
 		}
 		ctx.fillStyle = this.arcColor;
 		ctx.arc(this.arc_x, this.y + (this.height / 2), (this.height/2 + 4), 0, 2 * Math.PI);
@@ -300,6 +321,18 @@ class percentageBar extends Component{
 			}
 		}
 	}
+	  clicked() {
+    if (this.id == open) {
+      var clicked = false;
+    if(Math.pow((mouse_x2 - this.arc_x), 2) + Math.pow((mouse_y2 - (this.y + (this.height / 2))), 2) <= Math.pow((this.height/2 + 4	), 2)) { 
+        clicked = true;
+      }
+      if (clicked) {
+		  console.log("Clicked");
+        currentPerc = this.componentID;
+      }
+    }
+  }
 }
 
 function MouseDown(e){
