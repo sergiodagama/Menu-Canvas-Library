@@ -14,6 +14,6 @@ ________________________________________________________________________________
 Usage Instructions:
 
 > There is no complete library reference, because of it small size.
-> However in order to properly use the library it's recomended to follow the test.html.
+> However, in order to properly use the library it's recomended to follow the test.html.
 
 ___________________________________________________________________________________________
