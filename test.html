@@ -4,34 +4,45 @@
 <html>
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-	</head>
+	</head>		
 	<body>
 				<canvas id="menuCanvas"></canvas>
 				<script src="Menu.js"></script>
 		<script>
 			function main(){
-				var main = new Page(true, false, 1, "#FD1242");	
+				var main = new Page(true, 1, "#FD1242");	
             	main.draw();
 				pages.push(main);
 			}
 			main();
 			function test(){
-				var testpage = new Page(true, false, 2, "#FFDD00");
+				var testpage = new Page(false, 2, "#FFDD00", 1000, 1000);
 				testpage.draw();
 				pages.push(testpage);
 			}
-			var other = new Page(true, false, 3, "#000000");
-			pages.push(other);
+			function alertt(){
+				window.alert("You clicked me!")
+			}
 			components.push(new Button(1, 300, 400, "Test", test));
 			components.push(new inputText(1, 1, 60, 70, "Hello"));
 			components.push(new inputText(1, 2, 20, 20));
 			components.push(new inputText(1, 3, 200, 500));
-			components.push(new Button(2, 600, 200, "Back", main));
-			components.push(new Button(1, 300, 200, "Multk", test));
-			components.push(new percentageBar(2, 1, 300, 300, "Test"));
-			components.push(new percentageBar(2, 2, 400, 100, "Test"));
-			components.push(new percentageBar(2, 3, 500, 40, "Test"));
-			
+			components.push(new Button(2, 600, 200, "Back", main, true));
+			components.push(new Button(1, 300, 200, "Multk", alertt));
+			components.push(new percentageBar(2, 1, 300, 300));
+			components.push(new percentageBar(2, 2, 400, 100, true, "Test"));
+			components.push(new percentageBar(2, 3, 500, 40));
+			components.push(new checkBox(2, 1, 100, 400));
+			components.push(new checkBox(2, 2, 400, 400, true));
+			components.push(new dropDownList(1, 500, 500));
+			components[9].phrases[0] = "Portugal";
+			components[9].phrases[1] = "Italy";
+			components[9].phrases[2] = "Spain";
+			components[9].phrases[3] = "Brazil";
+			components[11].phrases[1] = "Portugal";
+			components[11].phrases[2] = "Italy";
+			components[11].phrases[3] = "Spain";
+			components[11].phrases[4] = "Brazil";
 			
 			loop = function(){
 				createComponents();
